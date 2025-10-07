@@ -1,27 +1,19 @@
 # wutil
-A simple WiFi utility CLI for FreeBSD
+A simple WiFi utility CLI powered by `wpa_supplicant`
 
 ## Building
 ### Dependencies
-`wutil` depends on `libifconfig` and it is available via `net/libifconfig`
-```console
-# # as a package
-# pkg install net/libifconfig
+`wutil` depends on [`libkqueue`](https://github.com/mheily/libkqueue)
+and [`libbsd`](https://gitlab.freedesktop.org/libbsd/libbsd)
 
-# # or as a port
-# make -C /usr/ports/net/libifconfig install
+### Build with `gmake`
+```console
+$ make -f GNUMakefile
 ```
 
-### Build `wutil` as a port
-All required patches are available in the `patch/` directory.
+### Installation
 ```console
-# patch -p1 -d /usr/ports < patch/sysutils_wutil.patch
-# make -C /usr/ports/sysutils/wutil install
-```
-
-### Build `wutil` with `bmake`
-```console
-$ make
+$ make -f GNUMakefile PREFIX=/usr/local install
 ```
 
 ## Usage
@@ -29,8 +21,6 @@ $ make
 ```console
 $ wutil -h
 Usage:  wutil {-h | subcommand [args...]}
-        wutil interfaces
-        wutil interface <interface>
         wutil [-c <wpa-ctrl-path>] known-networks
         wutil [-c <wpa-ctrl-path>] {known-network | forget} <ssid>
         wutil [-c <wpa-ctrl-path>] set
