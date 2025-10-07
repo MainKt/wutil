@@ -4,19 +4,22 @@
  * Copyright (c) 2025, Muhammad Saheed <saheed@FreeBSD.org>
  */
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif /* !_GNU_SOURCE */
+
 #include <sys/types.h>
 #include <sys/param.h>
-#include <sys/event.h>
-#include <sys/queue.h>
-#include <sys/queue_mergesort.h>
-#include <sys/sbuf.h>
+#include <sys/ioctl.h>
 #include <sys/socket.h>
 
+#include <bsd/sys/queue.h>
 #include <ctype.h>
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <kqueue/sys/event.h>
 #include <locale.h>
 #include <math.h>
 #include <stdarg.h>
@@ -29,6 +32,7 @@
 #include <wchar.h>
 
 #include "ctrl_seq.h"
+#include "sbuf.h"
 #include "usage.h"
 #include "utils.h"
 #include "wifi.h"
@@ -373,7 +377,7 @@ pop_notification(struct notifications *ns)
 	if (first == NULL)
 		return;
 
-	TAILQ_REMOVE_HEAD(ns, next);
+	TAILQ_REMOVE(ns, first, next);
 	free(first->msg);
 	free(first);
 }
@@ -1500,8 +1504,8 @@ handle_dialog_input(void *udata)
 		sbuf_clear(data->input_sb);
 		return (HANDLER_BREAK);
 	} else if ((key == DEL_KEY || key == BACKSPACE || key == CTRL('h')) &&
-	    data->input_sb->s_len != 0) {
-		data->input_sb->s_len--;
+	    data->input_sb->len != 0) {
+		data->input_sb->len--;
 	} else if (!iscntrl(key) && key < 128) {
 		sbuf_putc(data->input_sb, key);
 	} else if (key == '\r' && sbuf_len(data->input_sb) >= data->min) {

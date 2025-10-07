@@ -1,7 +1,7 @@
 PROGS	:=	wutil wutui
 
 CC			:= cc
-CFLAGS	:=
+CFLAGS  :=
 LDFLAGS	:=
 LDADD		:= -lm -lkqueue -lbsd
 PREFIX	?= $(HOME)/.local
@@ -20,7 +20,7 @@ CFLAGS	+=	-fsanitize=address,undefined
 LDFLAGS	+=	-fsanitize=address,undefined
 endif
 
-SRCS	:=	wpa_ctrl.c wifi.c usage.c utils.c
+SRCS	:=	wpa_ctrl.c wifi.c usage.c utils.c sbuf.c
 
 all:	$(PROGS)
 

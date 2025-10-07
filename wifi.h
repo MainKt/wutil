@@ -12,6 +12,8 @@
 
 #include <net/ethernet.h>
 
+#include <time.h>
+
 #include "array.h"
 #include "wpa_ctrl.h"
 
