@@ -378,7 +378,7 @@ cmd_scan(int argc, char *argv[], void *udata)
 	}
 
 	set_passive_scan(ctrl, true);
-	if (scan_and_wait(ctrl) != 0) {
+	if (scan(ctrl) != 0) {
 		warnx("scan failed");
 		set_passive_scan(ctrl, false);
 		return (1);
