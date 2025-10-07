@@ -11,10 +11,11 @@
 #include <sys/queue.h>
 
 #include <net/ethernet.h>
-#include <net80211/ieee80211.h>
 
 #include "array.h"
 #include "wpa_ctrl.h"
+
+#define IEEE80211_NWID_LEN   32
 
 #define WPA_EVENT_ASSOCIATED "Associated with"
 

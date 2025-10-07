@@ -4,6 +4,10 @@
  * Copyright (c) 2025, Muhammad Saheed <saheed@FreeBSD.org>
  */
 
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE
+#endif /* !_XOPEN_SOURCE */
+
 #include <arpa/inet.h>
 #include <bsd/sys/param.h>
 #include <err.h>

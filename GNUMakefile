@@ -20,7 +20,7 @@ CFLAGS	+=	-fsanitize=address,undefined
 LDFLAGS	+=	-fsanitize=address,undefined
 endif
 
-SRCS	:=	wpa_ctrl.c wifi.c usage.c
+SRCS	:=	wpa_ctrl.c wifi.c usage.c utils.c
 
 all:	$(PROGS)
 

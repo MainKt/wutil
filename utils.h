@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <wchar.h>
 
+#define nitems(a) (sizeof((a)) / sizeof((*a)))
+
 size_t ssid_to_wcs(const char *ssid, wchar_t **out);
 size_t ssid_extra_width(const char *ssid);
 size_t display_width(const char *ssid);

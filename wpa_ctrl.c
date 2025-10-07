@@ -40,6 +40,7 @@ wpa_ctrl_open(const char *ctrl_path)
 struct wpa_ctrl *
 wpa_ctrl_open2(const char *ctrl_path, const char *cli_path)
 {
+	const int SUNPATHLEN = sizeof(((struct sockaddr_un *)NULL)->sun_path);
 	struct wpa_ctrl *ctrl = NULL;
 
 	if (ctrl_path == NULL)
@@ -54,9 +55,8 @@ wpa_ctrl_open2(const char *ctrl_path, const char *cli_path)
 	if (ctrl->s == -1)
 		goto failure;
 
-	asprintf(&ctrl->sock_dir, "%s/wpa_ctrl_XXXXXX",
-	    cli_path == NULL ? "/tmp" : cli_path);
-	if (ctrl->sock_dir == NULL)
+	if (asprintf(&ctrl->sock_dir, "%s/wpa_ctrl_XXXXXX",
+		cli_path == NULL ? "/tmp" : cli_path) == -1)
 		goto failure;
 
 	if (mkdtemp(ctrl->sock_dir) == NULL)
@@ -66,19 +66,17 @@ wpa_ctrl_open2(const char *ctrl_path, const char *cli_path)
 	if (snprintf(ctrl->local.sun_path, SUNPATHLEN, "%s/sock",
 		ctrl->sock_dir) >= SUNPATHLEN)
 		goto failure;
-	ctrl->local.sun_len = SUN_LEN(&ctrl->local);
 
 	if (bind(ctrl->s, (struct sockaddr *)&ctrl->local,
-		ctrl->local.sun_len) == -1)
+		SUN_LEN(&ctrl->local)) == -1)
 		goto failure;
 
 	ctrl->dest.sun_family = AF_UNIX;
 	if (strlcpy(ctrl->dest.sun_path, ctrl_path, SUNPATHLEN) >= SUNPATHLEN)
 		goto failure;
-	ctrl->dest.sun_len = SUN_LEN(&ctrl->dest);
 
 	if (connect(ctrl->s, (struct sockaddr *)&ctrl->dest,
-		ctrl->dest.sun_len) == -1)
+		SUN_LEN(&ctrl->dest)) == -1)
 		goto failure;
 
 	return (ctrl);

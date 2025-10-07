@@ -4,8 +4,11 @@
  * Copyright (c) 2025, Muhammad Saheed <saheed@FreeBSD.org>
  */
 
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE
+#endif /* !_XOPEN_SOURCE */
+
 #include <net/if.h>
-#include <net80211/ieee80211.h>
 
 #include <ctype.h>
 #include <stdint.h>
@@ -13,6 +16,7 @@
 #include <string.h>
 
 #include "utils.h"
+#include "wifi.h"
 
 static uint8_t get_unescaped_char(uint8_t *s, size_t len, size_t *advance);
 static int digit_to_int(char c);

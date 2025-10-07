@@ -5,27 +5,21 @@
  */
 
 #include <sys/param.h>
-#include <sys/event.h>
-#include <sys/ioccom.h>
-#include <sys/queue.h>
-#include <sys/queue_mergesort.h>
-#include <sys/sockio.h>
 
 #include <net/ethernet.h>
 #include <net/if.h>
 #include <net/route.h>
-#include <net80211/ieee80211.h>
-#include <net80211/ieee80211_freebsd.h>
-#include <net80211/ieee80211_ioctl.h>
+#include <netinet/ether.h>
 
+#include <bsd/readpassphrase.h>
+#include <bsd/stdlib.h>
+#include <bsd/sys/queue.h>
 #include <dirent.h>
 #include <err.h>
 #include <getopt.h>
-#include <lib80211/lib80211_ioctl.h>
-#include <readpassphrase.h>
+#include <kqueue/sys/event.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
