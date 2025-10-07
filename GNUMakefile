@@ -1,0 +1,46 @@
+PROGS	:=	wutil wutui
+
+CC			:= cc
+CFLAGS	:=
+LDFLAGS	:=
+LDADD		:= -lm -lkqueue -lbsd
+PREFIX	?= $(HOME)/.local
+
+ifdef MK_DEV
+CFLAGS	+=		-g
+CFLAGS   +=		-Wall \
+							-Wextra \
+							-Wshadow \
+							-Wconversion \
+							-Wunreachable-code
+endif
+
+ifdef MK_WUTIL_SAN
+CFLAGS	+=	-fsanitize=address,undefined
+LDFLAGS	+=	-fsanitize=address,undefined
+endif
+
+SRCS	:=	wpa_ctrl.c wifi.c usage.c
+
+all:	$(PROGS)
+
+wutil: wutil.c $(SRCS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LDADD) $^ -o $@
+
+wutui: wutui.c $(SRCS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LDADD) $^ -o $@
+
+clean:
+	rm -rf $(PROGS)
+
+install: $(PROGS) wutil.8 wutui.8
+	mkdir -p $(PREFIX)/bin
+	cp $(PROGS) $(PREFIX)/bin
+	mkdir -p $(PREFIX)/share/man/man8
+	cp wutil.8 wutui.8 $(PREFIX)/share/man/man8
+
+deinstall:
+	rm -f $(addprefix $(PREFIX)/bin/, $(PROGS))
+	rm -f $(addprefix $(PREFIX)/share/man/man8/, wutil.8 wutui.8)
+
+.PHONY: all clean install deinstall
