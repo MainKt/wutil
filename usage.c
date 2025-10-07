@@ -14,8 +14,6 @@ usage(FILE *fout)
 	fprintf(fout,
 	    "Usage:"
 	    "\twutil {-h | subcommand [args...]}\n"
-	    "\twutil interfaces\n"
-	    "\twutil interface <interface>\n"
 	    "\twutil [-c <wpa-ctrl-path>] known-networks\n"
 	    "\twutil [-c <wpa-ctrl-path>] {known-network | forget} <ssid>\n"
 	    "\twutil [-c <wpa-ctrl-path>] set\n"
