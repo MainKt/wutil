@@ -7,6 +7,7 @@
 #include <sys/param.h>
 #include <sys/pciio.h>
 
+#include <net/if.h>
 #include <net/if_dl.h>
 
 #include <arpa/inet.h>
