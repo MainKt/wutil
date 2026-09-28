@@ -10,15 +10,17 @@
 #include <sys/un.h>
 
 #include <pthread.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 
 #include "../wifi.h"
 #include "../wpa_ctrl.h"
 
 struct mock_supplicant_worker_state {
-	int fd;
+	atomic_bool running;
+
 	pthread_mutex_t mutex;
-	bool running;
+	int fd;
 	struct supplicant_status *status;
 	struct scan_results *srs;
 	struct known_networks *kns;

@@ -6,6 +6,7 @@
 
 #include <sys/socket.h>
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,6 +23,8 @@ mock_supplicant_create(void)
 
 	if (ms == NULL)
 		goto failure;
+
+	atomic_init(&ms->worker_state.running, false);
 
 	ms->worker_state.mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -61,10 +64,12 @@ mock_supplicant_create(void)
 		ms->sockaddr.sun_len) == -1)
 		goto failure;
 
-	ms->worker_state.running = true;
+	atomic_store_explicit(&ms->worker_state.running, true,
+	    memory_order_relaxed);
 	if (pthread_create(&ms->worker, NULL, mock_supplicant_worker,
 		&ms->worker_state) != 0) {
-		ms->worker_state.running = false;
+		atomic_store_explicit(&ms->worker_state.running, false,
+		    memory_order_relaxed);
 		goto failure;
 	}
 
@@ -81,10 +86,10 @@ mock_supplicant_destroy(struct mock_supplicant *ms)
 	if (ms == NULL)
 		return;
 
-	if (ms->worker_state.running) {
-		pthread_mutex_lock(&ms->worker_state.mutex);
-		ms->worker_state.running = false;
-		pthread_mutex_unlock(&ms->worker_state.mutex);
+	if (atomic_load_explicit(&ms->worker_state.running,
+		memory_order_acquire)) {
+		atomic_store_explicit(&ms->worker_state.running, false,
+		    memory_order_release);
 		pthread_join(ms->worker, NULL);
 	}
 
@@ -217,5 +222,12 @@ wpa_ctrl_open_mock(struct mock_supplicant *ms)
 static void *
 mock_supplicant_worker(void *arg)
 {
+	struct mock_supplicant_worker_state *state = arg;
+
+	assert(state != NULL);
+
+	while (atomic_load_explicit(&state->running, memory_order_acquire)) {
+	}
+
 	return (NULL);
 }
