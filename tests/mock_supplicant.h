@@ -34,6 +34,13 @@ struct mock_supplicant {
 struct mock_supplicant *mock_supplicant_create(void);
 void mock_supplicant_destroy(struct mock_supplicant *);
 
+bool mock_supplicant_set_known_networks(struct mock_supplicant *,
+    struct known_networks const *);
+bool mock_supplicant_set_scan_results(struct mock_supplicant *,
+    struct scan_results const *);
+bool mock_supplicant_set_status(struct mock_supplicant *,
+    struct supplicant_status const *);
+
 struct wpa_ctrl *wpa_ctrl_open_mock(struct mock_supplicant *);
 
 #endif /* !MOCK_SUPPLICANT_H */

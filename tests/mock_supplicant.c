@@ -92,12 +92,8 @@ mock_supplicant_destroy(struct mock_supplicant *ms)
 
 	close(ms->worker_state.fd);
 
-	ARRAY_FREE(ms->worker_state.kns);
-	free(ms->worker_state.kns);
-
-	ARRAY_FREE(ms->worker_state.srs);
-	free(ms->worker_state.srs);
-
+	free_known_networks(ms->worker_state.kns);
+	free_scan_results(ms->worker_state.srs);
 	free_supplicant_status(ms->worker_state.status);
 
 	if (ms->sockaddr.sun_path[0] != '\0')
@@ -109,6 +105,104 @@ mock_supplicant_destroy(struct mock_supplicant *ms)
 	}
 
 	free(ms);
+}
+
+bool
+mock_supplicant_set_known_networks(struct mock_supplicant *ms,
+    const struct known_networks *kns)
+{
+	struct known_networks *dup = NULL;
+
+	if (ms == NULL || kns == NULL)
+		goto failure;
+
+	if ((dup = calloc(1, sizeof(*dup))) == NULL)
+		goto failure;
+
+	for (size_t i = 0; i < kns->len; i++) {
+		if (!ARRAY_APPEND(known_networks, dup, kns->items[i]))
+			goto failure;
+	}
+
+	pthread_mutex_lock(&ms->worker_state.mutex);
+	free_known_networks(ms->worker_state.kns);
+	ms->worker_state.kns = dup;
+	pthread_mutex_unlock(&ms->worker_state.mutex);
+
+	return (true);
+failure:
+	free_known_networks(dup);
+
+	return (false);
+}
+
+bool
+mock_supplicant_set_scan_results(struct mock_supplicant *ms,
+    const struct scan_results *srs)
+{
+	struct scan_results *dup = NULL;
+
+	if (ms == NULL || srs == NULL)
+		goto failure;
+
+	if ((dup = calloc(1, sizeof(*dup))) == NULL)
+		goto failure;
+
+	for (size_t i = 0; i < srs->len; i++) {
+		if (!ARRAY_APPEND(scan_results, dup, srs->items[i]))
+			goto failure;
+	}
+
+	pthread_mutex_lock(&ms->worker_state.mutex);
+	free_scan_results(ms->worker_state.srs);
+	ms->worker_state.srs = dup;
+	pthread_mutex_unlock(&ms->worker_state.mutex);
+
+	return (true);
+failure:
+	free_scan_results(dup);
+
+	return (false);
+}
+
+bool
+mock_supplicant_set_status(struct mock_supplicant *ms,
+    const struct supplicant_status *status)
+{
+	struct supplicant_status *dup = NULL;
+
+	if (ms == NULL || status == NULL)
+		goto failure;
+
+	if ((dup = calloc(1, sizeof(*dup))) == NULL)
+		goto failure;
+
+	dup->freq = status->freq;
+	if (status->state != NULL &&
+	    (dup->state = strdup(status->state)) == NULL)
+		goto failure;
+	if (status->bssid != NULL &&
+	    (dup->bssid = strdup(status->bssid)) == NULL)
+		goto failure;
+	if (status->ssid != NULL && (dup->ssid = strdup(status->ssid)) == NULL)
+		goto failure;
+	if (status->ip_address != NULL &&
+	    (dup->ip_address = strdup(status->ip_address)) == NULL)
+		goto failure;
+	if (status->security != NULL &&
+	    (dup->security = strdup(status->security)) == NULL)
+		goto failure;
+
+	pthread_mutex_lock(&ms->worker_state.mutex);
+	free_supplicant_status(ms->worker_state.status);
+	ms->worker_state.status = dup;
+	pthread_mutex_unlock(&ms->worker_state.mutex);
+
+	return (true);
+failure:
+	free_supplicant_status(dup);
+
+	return (false);
 }
 
 struct wpa_ctrl *
