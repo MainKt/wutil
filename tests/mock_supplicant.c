@@ -111,6 +111,15 @@ mock_supplicant_destroy(struct mock_supplicant *ms)
 	free(ms);
 }
 
+struct wpa_ctrl *
+wpa_ctrl_open_mock(struct mock_supplicant *ms)
+{
+	if (ms == NULL)
+		return (NULL);
+
+	return (wpa_ctrl_open(ms->sockaddr.sun_path));
+}
+
 static void *
 mock_supplicant_worker(void *arg)
 {

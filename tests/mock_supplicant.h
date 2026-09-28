@@ -34,4 +34,6 @@ struct mock_supplicant {
 struct mock_supplicant *mock_supplicant_create(void);
 void mock_supplicant_destroy(struct mock_supplicant *);
 
+struct wpa_ctrl *wpa_ctrl_open_mock(struct mock_supplicant *);
+
 #endif /* !MOCK_SUPPLICANT_H */
