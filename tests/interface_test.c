@@ -6,6 +6,7 @@
 
 #include <sys/param.h>
 #include <sys/ioctl.h>
+#include <sys/pciio.h>
 #include <sys/sysctl.h>
 
 #include <net/if_dl.h>
@@ -168,6 +169,71 @@ ATF_TC_BODY(get_mac_add, tc)
 	ifconfig_close(lifh);
 }
 
+ATF_TC_WITHOUT_HEAD(get_iface_parent_errors);
+ATF_TC_BODY(get_iface_parent_errors, tc)
+{
+	struct {
+		const char *name;
+		int expected;
+	} cases[] = {
+		{ "wlan", 1 },
+		{ "em0", 1 },
+		{ NULL, 1 },
+		{ "wlan0x", 1 },
+	};
+	char buf[32];
+
+	for (size_t i = 0; i < nitems(cases); i++) {
+		int len = cases[i].name == NULL ? 0 : strlen(cases[i].name);
+		int status = get_iface_parent(cases[i].name, len, buf,
+		    sizeof(buf));
+
+		ATF_CHECK_EQ(status, cases[i].expected);
+	}
+
+	ATF_CHECK_EQ(1, get_iface_parent(NULL, 4, buf, sizeof(buf)));
+}
+
+ATF_TC_WITHOUT_HEAD(get_iface_parent_wlan);
+ATF_TC_BODY(get_iface_parent_wlan, tc)
+{
+	struct ifaddrs *ifaddrs = NULL;
+	char ifname[IFNAMSIZ] = {};
+	bool found = false;
+
+	if (getifaddrs(&ifaddrs) == 0) {
+		for (struct ifaddrs *ifa = ifaddrs; ifa != NULL;
+		    ifa = ifa->ifa_next) {
+			if (strncmp(ifa->ifa_name, "wlan", 4) == 0) {
+				strlcpy(ifname, ifa->ifa_name, sizeof(ifname));
+				found = true;
+				break;
+			}
+		}
+		freeifaddrs(ifaddrs);
+	}
+
+	if (!found)
+		atf_tc_skip("no wlan interface on this system");
+
+	{
+		char parent[PCI_MAXNAMELEN + 1];
+		int status = get_iface_parent(ifname, strlen(ifname), parent,
+		    sizeof(parent));
+
+		ATF_REQUIRE_EQ(0, status);
+		ATF_CHECK(parent[0] != '\0');
+	}
+
+	{
+		char shortbuf[1];
+		int status = get_iface_parent(ifname, strlen(ifname), shortbuf,
+		    sizeof(shortbuf));
+
+		ATF_CHECK_EQ(1, status);
+	}
+}
+
 ATF_TP_ADD_TCS(tp)
 {
 	ATF_TP_ADD_TC(tp, is_wlan_group_null_ifname);
@@ -176,6 +242,8 @@ ATF_TP_ADD_TCS(tp)
 	ATF_TP_ADD_TC(tp, is_wlan_group_wlan);
 	ATF_TP_ADD_TC(tp, is_ifaddr_af_inet);
 	ATF_TP_ADD_TC(tp, get_mac_add);
+	ATF_TP_ADD_TC(tp, get_iface_parent_errors);
+	ATF_TP_ADD_TC(tp, get_iface_parent_wlan);
 
 	return (atf_no_error());
 }
