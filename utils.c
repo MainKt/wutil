@@ -157,11 +157,15 @@ ssid_extra_width(const char *ssid)
 {
 	wchar_t *wssid = NULL;
 	size_t len = ssid_to_wcs(ssid, &wssid);
+	int width = -1;
 
 	if (len == (size_t)-1)
 		return (-1);
 
-	return (wcswidth(wssid, len) - len);
+	if ((width = wcswidth(wssid, len)) == -1)
+		return (-1);
+
+	return (width - len);
 }
 
 size_t
