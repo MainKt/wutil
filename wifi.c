@@ -546,6 +546,7 @@ configure_ssid(struct wpa_ctrl *ctrl, int nwid, const char *ssid,
 			 password_buf, sizeof(password_buf),
 			 RPP_REQUIRE_TTY)) == NULL) {
 			warn("failed to read password");
+			ret = 1;
 			goto cleanup;
 		}
 
@@ -553,6 +554,7 @@ configure_ssid(struct wpa_ctrl *ctrl, int nwid, const char *ssid,
 		if (psk_len < PSK_MIN || psk_len > PSK_MAX) {
 			warnx("password must be %d–%d characters", PSK_MIN,
 			    PSK_MAX);
+			ret = 1;
 			goto cleanup;
 		}
 
@@ -563,6 +565,7 @@ configure_ssid(struct wpa_ctrl *ctrl, int nwid, const char *ssid,
 			if (fgets(identity_buf, sizeof(identity_buf), stdin) ==
 			    NULL) {
 				warnx("failed to read identity");
+				ret = 1;
 				goto cleanup;
 			}
 			identity_buf[strcspn(identity_buf, "\n")] = '\0';
@@ -574,6 +577,7 @@ configure_ssid(struct wpa_ctrl *ctrl, int nwid, const char *ssid,
 			 password_buf, sizeof(password_buf),
 			 RPP_REQUIRE_TTY)) == NULL) {
 			warn("failed to read password");
+			ret = 1;
 			goto cleanup;
 		}
 
