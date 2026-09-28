@@ -165,7 +165,7 @@ ssid_extra_width(const char *ssid)
 }
 
 size_t
-last_codepoint_pos(char *s, size_t len)
+last_codepoint_pos(const char *s, size_t len)
 {
 	for (size_t i = len - 1; i != (size_t)-1; i--) {
 		if ((s[i] & 0b11000000) != 0b10000000)
