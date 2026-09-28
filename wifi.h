@@ -29,8 +29,9 @@ enum security { SEC_OPEN = 0, SEC_EAP, SEC_PSK, SEC_NA };
 struct known_network {
 	int id, priority;
 	bool hidden;
+	bool current;
+	bool autoconnect;
 	enum security security;
-	enum { KN_ENABLED = 0, KN_DISABLED, KN_CURRENT } state;
 	char ssid[IEEE80211_NWID_LEN + 1];
 	struct ether_addr bssid;
 	TAILQ_ENTRY(known_network) next;
@@ -87,6 +88,7 @@ struct known_networks *get_known_networks(struct wpa_ctrl *ctrl);
 void free_known_networks(struct known_networks *nws);
 enum security known_network_security(struct wpa_ctrl *ctrl, int nwid);
 bool is_hidden_network(struct wpa_ctrl *ctrl, int nwid);
+bool is_disabled_network(struct wpa_ctrl *ctrl, int nwid);
 int get_network_priority(struct wpa_ctrl *ctrl, int nwid);
 int set_autoconnect(struct wpa_ctrl *ctrl, int nwid, bool enable);
 int set_priority(struct wpa_ctrl *ctrl, int nwid, int priority);

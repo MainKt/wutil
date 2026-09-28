@@ -300,14 +300,8 @@ get_known_networks(struct wpa_ctrl *ctrl)
 		if (bssid != NULL && ether_aton_r(bssid, &nw.bssid) == NULL)
 			nw.bssid = (struct ether_addr) { 0 };
 
-		nw.state = KN_ENABLED;
-
-		if (flags != NULL) {
-			if (strstr(flags, "CURRENT") != NULL)
-				nw.state = KN_CURRENT;
-			else if (strstr(flags, "DISABLED") != NULL)
-				nw.state = KN_DISABLED;
-		}
+		nw.autoconnect = !is_disabled_network(ctrl, nw.id);
+		nw.current = flags != NULL && strstr(flags, "CURRENT") != NULL;
 
 		if (!ARRAY_APPEND(known_networks, nws, nw)) {
 			warn("reallocarray");
@@ -788,6 +782,19 @@ is_hidden_network(struct wpa_ctrl *ctrl, int nwid)
 		return (false);
 
 	return (reply[0] == '1');
+}
+
+bool
+is_disabled_network(struct wpa_ctrl *ctrl, int nwid)
+{
+	char reply[WPA_INT32_REPLY_SIZE];
+	size_t reply_len = sizeof(reply) - 1;
+
+	if (wpa_ctrl_requestf(ctrl, reply, &reply_len,
+		"GET_NETWORK %d disabled", nwid) != 0)
+		return (false);
+
+	return (strtol(reply, NULL, 10) != 0);
 }
 
 int

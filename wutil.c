@@ -251,9 +251,8 @@ cmd_known_networks(int argc, char *argv[], void *udata)
 		struct known_network *nw = &nws->items[i];
 		const size_t ssid_width = display_width(nw->ssid);
 
-		printf("%c %s%*s %-8s %-6s %8d\n",
-		    nw->state == KN_CURRENT ? '>' : ' ', nw->ssid,
-		    MAX(IEEE80211_NWID_LEN - (int)ssid_width, 0), "",
+		printf("%c %s%*s %-8s %-6s %8d\n", nw->current ? '>' : ' ',
+		    nw->ssid, MAX(IEEE80211_NWID_LEN - (int)ssid_width, 0), "",
 		    security_to_string[nw->security], nw->hidden ? "Yes" : "",
 		    nw->priority);
 	}
@@ -304,10 +303,7 @@ cmd_known_network(int argc, char *argv[], void *udata)
 	printf("%12s: %s\n", "Security", security_to_string[nw->security]);
 	printf("%12s: %s\n", "Hidden", nw->hidden ? "Yes" : "No");
 	printf("%12s: %d\n", "Priority", nw->priority);
-	printf("%12s: %s\n", "Autoconnect",
-	    nw->state == KN_CURRENT	? "Current" :
-		nw->state == KN_ENABLED ? "Yes" :
-					  "No");
+	printf("%12s: %s\n", "Autoconnect", nw->autoconnect ? "Yes" : "No");
 
 	free_known_networks(nws);
 
@@ -681,7 +677,8 @@ cmd_connect(int argc, char *argv[], void *udata)
 		if (nw->id == nwid)
 			continue;
 
-		set_autoconnect(ctrl, nw->id, nw->state == KN_ENABLED);
+		// TODO: this shouldn't be like this (T_T)
+		set_autoconnect(ctrl, nw->id, nw->autoconnect && !nw->current);
 	}
 
 	if (update_config(ctrl) != 0) {

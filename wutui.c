@@ -727,15 +727,11 @@ render_known_networks(struct sbuf *sb)
 			"");
 		sbuf_sliding_printf(sb, wutui.horizontal_pos,
 		    MAX(COLS - 4 - ssid_extra, 0),
-		    L"%s%-*s  %-*s  %-*s  %*d  %-*s",
-		    kn->state == KN_CURRENT ? ">" : " ",
+		    L"%s%-*s  %-*s  %-*s  %*d  %-*s", kn->current ? ">" : " ",
 		    IEEE80211_NWID_LEN - ssid_extra, kn->ssid, SECURITY_LEN,
 		    security_to_string[kn->security], HIDDEN_LEN,
 		    kn->hidden ? "Yes" : "No", PRIORITY_LEN, kn->priority,
-		    AUTO_CONNECT_LEN,
-		    kn->state == KN_ENABLED	? "Yes" :
-			kn->state == KN_CURRENT ? "Current" :
-						  "No");
+		    AUTO_CONNECT_LEN, kn->autoconnect ? "Yes" : "No");
 		sbuf_printf(sb, REMOVE_INVERT " %s\r\n",
 		    right_corner_block(i - wutui.kn_offset, wutui.kn_entries,
 			scrollbar));
@@ -1304,7 +1300,9 @@ connect_scan_result(void)
 		if (nw->id == nwid)
 			continue;
 
-		set_autoconnect(wutui.ctrl, nw->id, nw->state == KN_ENABLED);
+		// TODO: this shouldn't be like this (T_T)
+		set_autoconnect(wutui.ctrl, nw->id,
+		    nw->autoconnect && !nw->current);
 	}
 
 	if (update_config(wutui.ctrl) != 0)
@@ -1487,7 +1485,7 @@ handle_input(void *udata)
 			    &wutui.kns->items[wutui.selected_kn];
 
 			if (set_autoconnect(wutui.ctrl, selected->id,
-				selected->state != KN_ENABLED) != 0)
+				!selected->autoconnect) != 0)
 				diex("failed to set autoconnect");
 			update_known_networks();
 		}
