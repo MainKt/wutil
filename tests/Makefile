@@ -19,4 +19,7 @@ ATF_TESTS_C+=	interface_test
 SRCS.interface_test=	interface_test.c interface.c
 LDADD.interface_test+=	-lifconfig
 
+ATF_TESTS_C+=	utils_test
+SRCS.utils_test=	utils_test.c utils.c
+
 .include <bsd.test.mk>
