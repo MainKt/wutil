@@ -7,6 +7,8 @@
 #include <sys/socket.h>
 
 #include <assert.h>
+#include <errno.h>
+#include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,7 +16,14 @@
 
 #include "./mock_supplicant.h"
 
+#define MOCK_MAX_REQ_SIZE 4096
+#define MOCK_MAX_RES_SIZE 4096
+
 static void *mock_supplicant_worker(void *arg);
+
+static bool recv_and_reply(struct mock_supplicant_worker_state *state);
+static ssize_t handle_req(struct mock_supplicant_worker_state *state,
+    const char *req, char *res, size_t res_size);
 
 struct mock_supplicant *
 mock_supplicant_create(void)
@@ -227,7 +236,86 @@ mock_supplicant_worker(void *arg)
 	assert(state != NULL);
 
 	while (atomic_load_explicit(&state->running, memory_order_acquire)) {
+		struct pollfd pfd = { .fd = state->fd, .events = POLLIN };
+		int nev = poll(&pfd, 1, 50);
+
+		if (nev == -1) {
+			if (errno == EINTR)
+				continue;
+			break;
+		}
+
+		if (nev == 0)
+			continue;
+
+		if ((pfd.revents & (POLLERR | POLLHUP | POLLNVAL)) != 0)
+			break;
+
+		if (!recv_and_reply(state))
+			break;
 	}
 
 	return (NULL);
+}
+
+static bool
+recv_and_reply(struct mock_supplicant_worker_state *state)
+{
+	for (;;) {
+		struct sockaddr_un from;
+		socklen_t from_size = sizeof(from);
+		static char req[MOCK_MAX_REQ_SIZE];
+		static char res[MOCK_MAX_RES_SIZE];
+		ssize_t res_size = -1;
+		ssize_t len = recvfrom(state->fd, req, sizeof(req) - 1, 0,
+		    (struct sockaddr *)&from, &from_size);
+
+		if (len == -1) {
+			if (errno == EINTR)
+				continue;
+
+			if (errno == EAGAIN || errno == EWOULDBLOCK)
+				return (true);
+
+			return (false);
+		}
+		req[len] = '\0';
+
+		if ((res_size = handle_req(state, req, res, sizeof(res))) < 0)
+			continue;
+
+		if (sendto(state->fd, res, res_size, 0,
+			(struct sockaddr *)&from, from_size) == -1) {
+			continue;
+		}
+	}
+}
+
+static ssize_t
+handle_req(struct mock_supplicant_worker_state *state, const char *req,
+    char *res, size_t res_size)
+{
+	ssize_t ret = 0;
+
+	if (strncmp(req, "BSS ", 4) == 0) {
+		int freq = 0;
+
+		pthread_mutex_lock(&state->mutex);
+		assert(state->status != 0);
+		freq = state->status->freq;
+		pthread_mutex_unlock(&state->mutex);
+
+		ret = snprintf(res, res_size, "freq=%d", freq);
+		if (ret >= res_size) {
+			ret = -EOVERFLOW;
+			goto failure;
+		}
+	} else if ((ret = snprintf(res, res_size, "FAIL")) >= res_size) {
+		ret = -EOVERFLOW;
+		goto failure;
+	}
+
+	return (ret + 1);
+failure:
+	return (ret);
 }

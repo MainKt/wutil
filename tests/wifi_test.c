@@ -13,8 +13,8 @@
 
 static void mock_supplicant_populate(struct mock_supplicant *);
 
-ATF_TC_WITHOUT_HEAD(mock_supplicant);
-ATF_TC_BODY(mock_supplicant, tc)
+ATF_TC_WITHOUT_HEAD(get_bss_freq);
+ATF_TC_BODY(get_bss_freq, tc)
 {
 	struct mock_supplicant *ms = mock_supplicant_create();
 	struct wpa_ctrl *ctrl = NULL;
@@ -26,13 +26,15 @@ ATF_TC_BODY(mock_supplicant, tc)
 	ctrl = wpa_ctrl_open_mock(ms);
 	ATF_REQUIRE(ctrl != NULL);
 
+	ATF_CHECK_EQ(2345, get_bss_freq(ctrl, "c8:5b:76:f0:9f:85"));
+
 	wpa_ctrl_close(ctrl);
 	mock_supplicant_destroy(ms);
 }
 
 ATF_TP_ADD_TCS(tp)
 {
-	ATF_TP_ADD_TC(tp, mock_supplicant);
+	ATF_TP_ADD_TC(tp, get_bss_freq);
 
 	return (atf_no_error());
 }
@@ -78,7 +80,7 @@ mock_supplicant_populate(struct mock_supplicant *ms)
 	};
 
 	ATF_REQUIRE(ms != NULL);
-	ATF_REQUIRE_EQ(mock_supplicant_set_status(ms, &status), true);
-	ATF_REQUIRE_EQ(mock_supplicant_set_known_networks(ms, &kns), true);
-	ATF_REQUIRE_EQ(mock_supplicant_set_scan_results(ms, &srs), true);
+	ATF_REQUIRE_EQ(true, mock_supplicant_set_status(ms, &status));
+	ATF_REQUIRE_EQ(true, mock_supplicant_set_known_networks(ms, &kns));
+	ATF_REQUIRE_EQ(true, mock_supplicant_set_scan_results(ms, &srs));
 }
