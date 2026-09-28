@@ -9,6 +9,7 @@
 #include <sys/sysctl.h>
 
 #include <atf-c.h>
+#include <ifaddrs.h>
 #include <stdbool.h>
 #include <unistd.h>
 
@@ -91,12 +92,38 @@ ATF_TC_BODY(is_wlan_group_wlan, tc)
 	ifconfig_close(lifh);
 }
 
+ATF_TC_WITHOUT_HEAD(is_ifaddr_af_inet);
+ATF_TC_BODY(is_ifaddr_af_inet, tc)
+{
+	struct {
+		struct sockaddr sa;
+		bool expected;
+	} cases[] = {
+		{ { .sa_family = AF_INET }, true },
+		{ { .sa_family = AF_INET6 }, true },
+		{ { .sa_family = AF_LINK }, false },
+	};
+	struct ifconfig_handle *lifh = ifconfig_open();
+
+	ATF_REQUIRE(lifh != NULL);
+	for (size_t i = 0; i < nitems(cases); i++) {
+		struct ifaddrs ifa = { .ifa_addr = &cases[i].sa };
+		bool flag = false;
+
+		is_ifaddr_af_inet(lifh, &ifa, &flag);
+		ATF_CHECK_EQ(flag, cases[i].expected);
+	}
+
+	ifconfig_close(lifh);
+}
+
 ATF_TP_ADD_TCS(tp)
 {
 	ATF_TP_ADD_TC(tp, is_wlan_group_null_ifname);
 	ATF_TP_ADD_TC(tp, is_wlan_group_invalid_ifname);
 	ATF_TP_ADD_TC(tp, is_wlan_group_not_member);
 	ATF_TP_ADD_TC(tp, is_wlan_group_wlan);
+	ATF_TP_ADD_TC(tp, is_ifaddr_af_inet);
 
 	return (atf_no_error());
 }
